@@ -23,10 +23,10 @@ def process_a_group(basepath, regex_pattern):
     :return:
     """
     basepath = Path(basepath)
-    anno_keys = {'annolist': 'annolist',  # filename: keyword in mat
-                 'annolist_head': 'annolist_head',
-                 'annolist_img': 'annolist_img',
-                 'annolist_objpos': 'annolist_objpos',
+    anno_keys = {'annolist': 'annolist',  # filename: keyword in mat; joint position, (vis, y, x, idx)
+                 'annolist_head': 'annolist_head',  # head bbox
+                 'annolist_img': 'annolist_img',  # img file path
+                 'annolist_objpos': 'annolist_objpos',  # person position, one point
                  'annolist_poseExtremeness': 'poseExtremeness',
                  'annolist_scale': 'annolist_scale',
                  }
