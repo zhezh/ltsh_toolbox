@@ -95,8 +95,21 @@ if __name__ == '__main__':
         ax.add_patch(p)
 
     objpos = out['annolist_objpos'][1]
-    for ob in objpos:
-        ax.plot(ob[0], ob[1], color='red', marker='o', linewidth=2, markersize=12)
+    scale = out['annolist_scale'][1]
+    for ob, s in zip(objpos, scale):
+        # ax.plot(ob[0], ob[1], color='red', marker='o', linewidth=2, markersize=12)
+        c = np.array(ob)
+        s = np.array([s,s]).reshape((-1,))
+        if c[0] != -1:
+            c[1] = c[1] + 40 * s[1]
+            s = s * 1.25
+        c = c - 1
+
+        box_lt = c - s*100
+        box_size = s * 200
+        p = patches.Rectangle(box_lt, box_size[0], box_size[1], fill=False, color='gold')
+        ax.add_patch(p)
+
 
     kp = out['annolist'][1]  # (9, 16, 4)
     # ('is_visible', 'O'), ('y', 'O'), ('x', 'O'), ('id', 'O') idx of joint [0, 15]
@@ -109,5 +122,9 @@ if __name__ == '__main__':
             ax.plot(x, y, color='gold', marker='+', linewidth=2, markersize=6)
 
 
+
+
+
+    extre = out['annolist_poseExtremeness'][1]
 
     pass
