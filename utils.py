@@ -10,7 +10,9 @@ import re
 def _process_one_cell(cell):
     mdtype = cell.dtype
     if mdtype.names is not None:
-        ndata = [np.array(cell[n][0, 0])[0, 0] for n in mdtype.names]
+        # ndata = [np.array(cell[n][0, 0])[0, 0] for n in mdtype.names]
+        ndata_ = {n: np.array(cell[n][0, 0])[0, 0] for n in mdtype.names}
+        ndata = [ndata_[k] for k in ['x','y','is_visible', 'id'] ]
     else:
         ndata = np.ones(4) * -1
     return ndata
@@ -69,6 +71,8 @@ def process_a_group(basepath, regex_pattern):
 
 if __name__ == '__main__':
     base_path = Path('/data/zhaz/dataset/ltsh/train/145/')
+    base_path = Path('/data/zhaz/dataset/ltsh/train/118/')
+    imgi = 45
     re_img_name = re.compile('train/[0-9]*/[A-Za-z0-9/.]*', flags=0)
     re_img_name = re.compile(re_img_name)
     out = process_a_group(base_path, re_img_name)
@@ -79,52 +83,66 @@ if __name__ == '__main__':
     import skimage.io
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
+    plt.ion()
     # img_p = base_path / out['annolist_img'][1]
-    img_p = base_path / 'composition/00001.png'
+    img_p = base_path / 'composition/{:05d}.png'.format(imgi)
     img = skimage.io.imread(img_p)
     fig, ax = plt.subplots()
     ax.imshow(img)
-    plt.show()
+    # plt.show()
 
     # plt head box
-    head_boxes = out['annolist_head'][1]
+    head_boxes = out['annolist_head'][imgi]
     for hb in head_boxes:
         lt = np.array([hb[0], hb[1]])
         size = np.array([hb[2]-hb[0], hb[3]-hb[1]])
         p = patches.Rectangle(lt, size[0], size[1], fill=False)
         ax.add_patch(p)
 
-    objpos = out['annolist_objpos'][1]
-    scale = out['annolist_scale'][1]
-    for ob, s in zip(objpos, scale):
-        # ax.plot(ob[0], ob[1], color='red', marker='o', linewidth=2, markersize=12)
-        c = np.array(ob)
-        s = np.array([s,s]).reshape((-1,))
-        if c[0] != -1:
-            c[1] = c[1] + 40 * s[1]
-            s = s * 1.25
-        c = c - 1
+    objpos = out['annolist_objpos'][imgi]
 
-        box_lt = c - s*100
+
+    kp = out['annolist'][imgi]  # (9, 16, 4)
+    root = kp[:,6, 0:2]
+    # root = np.zeros_like(root_yx)
+    # root[:,0] = root_yx[:,1]
+    # root[:, 1] = root_yx[:, 0]
+    # ('is_visible', 'O'), ('y', 'O'), ('x', 'O'), ('id', 'O') idx of joint [0, 15]
+    for kpp in kp:
+        for j in kpp:
+            vis = j[2]
+            y = j[1]
+            x = j[0]
+            idx_joint = j[3]
+            ax.plot(x, y, color='g', marker='*', linewidth=2, markersize=6)
+
+    scale = out['annolist_scale'][imgi]
+    for ob, r, s in zip(objpos, root, scale):
+        # ax.plot(ob[0], ob[1], color='red', marker='o', linewidth=2, markersize=12)
+
+        # use root as center, what the root coordinates if root is outside img ???
+        # ANS: root joint will be (-1, -1),
+        # but objpos is the actual negative number reflecting object position
+
+        s = np.array([s, s]).reshape((-1,))
+        s = s * 1.25
+        if r[0] > -1 and r[1] > -1:
+            c = r
+        else:
+            c = np.array(ob)
+            if c[0] != -1:
+                c[1] = c[1] + 40 * s[1]
+            c = c - 1
+
+        box_lt = c - s * 100
         box_size = s * 200
         p = patches.Rectangle(box_lt, box_size[0], box_size[1], fill=False, color='gold')
         ax.add_patch(p)
 
 
-    kp = out['annolist'][1]  # (9, 16, 4)
-    # ('is_visible', 'O'), ('y', 'O'), ('x', 'O'), ('id', 'O') idx of joint [0, 15]
-    for kpp in kp:
-        for j in kpp:
-            vis = j[0]
-            y = j[1]
-            x = j[2]
-            idx_joint = j[3]
-            ax.plot(x, y, color='gold', marker='+', linewidth=2, markersize=6)
 
 
 
-
-
-    extre = out['annolist_poseExtremeness'][1]
+    extre = out['annolist_poseExtremeness'][imgi]
 
     pass
