@@ -52,7 +52,11 @@ def process_a_group(basepath):
     for k in anno_keys:
         anno_p = anno_paths[k]
         anno_k = anno_keys[k]
-        m = scipy.io.loadmat(anno_p)
+        try:
+            m = scipy.io.loadmat(anno_p)
+        except OSError:
+            print('file not exist {}'.format(anno_p))
+            return None
         mdata = m[anno_k]
 
         if k in ['annolist']:
@@ -85,7 +89,7 @@ def process_a_group(basepath):
 
 def get_bbox(center, scale, kps):
     """
-
+    process one image at a time
     :param center:
     :param scale: s * 200 is the box size in pixels
     :param kps:
