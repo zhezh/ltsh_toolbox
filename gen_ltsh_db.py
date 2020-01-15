@@ -51,7 +51,7 @@ def main(basepath):
 
                 datum = {
                     'joints_3d': joints_3d,
-                    'joints_vis_3d': joints_3d_vis,
+                    'joints_3d_vis': joints_3d_vis,
                     'image': img_str,
                     'center': c,
                     'scale': s,
