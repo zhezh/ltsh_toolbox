@@ -13,12 +13,14 @@ from tqdm import tqdm
 from utils import *
 
 
-def main(basepath):
+def gen_db_record(folders):
+    """
+
+    :param folders: list of path, each is like 'ltsh/train/1573'
+    :return:
+    """
     db = []
-    # get all sub folder
-    basepath = Path(basepath)
-    assert os.path.exists(basepath), 'Check the dataset base path!'
-    for imp in tqdm(basepath.glob('train/*')):
+    for imp in tqdm(folders):
         out_annots = process_a_group(imp)
         if out_annots is None:
             continue
@@ -64,9 +66,33 @@ def main(basepath):
     return db
 
 
+def main(basepath):
+    # get all sub folder
+    basepath = Path(basepath)
+    assert os.path.exists(basepath), 'Check the dataset base path!'
+
+    # train val split
+    all_subfolders = sorted(list(basepath.glob('train/*')))
+    len_subfolders = len(all_subfolders)
+    n_valid = len_subfolders // 10
+    split_index = int(n_valid * 9)
+    train_subfolders = all_subfolders[0:split_index]
+    valid_subfolders = all_subfolders[split_index:]
+
+    train_db = gen_db_record(train_subfolders)
+    valid_db = gen_db_record(valid_subfolders)
+
+    return train_db, valid_db
+
+
 if __name__ == '__main__':
     basepath = Path('data/ltsh')
-    db = main(basepath)
+    train_db, valid_db = main(basepath)
+
     db_path = Path('data/annot')/'train.pkl'
     with open(db_path, 'wb') as f:
-        pickle.dump(db, f)
+        pickle.dump(train_db, f)
+
+    db_path = Path('data/annot') / 'valid.pkl'
+    with open(db_path, 'wb') as f:
+        pickle.dump(valid_db, f)
